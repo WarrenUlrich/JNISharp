@@ -15,8 +15,6 @@ namespace JNISharp.NativeInterface
     {
         internal static JavaVM* VM;
 
-        private static readonly object envLock = new object();
-
         [ThreadStatic]
         internal static JNIEnv* env;
 
@@ -30,7 +28,7 @@ namespace JNISharp.NativeInterface
                     var res = VM->Functions->AttachCurrentThread(VM, out env, ref temp);
 
                     if (res != JNI.Result.Ok)
-                        throw new Exception($"failed to attach thread, result: {res}");
+                        throw new JNIResultException(res);
                 }
 
                 return env;
@@ -78,19 +76,16 @@ namespace JNISharp.NativeInterface
         {
             unsafe
             {
-                lock (envLock)
+                IntPtr bytesPtr = Marshal.UnsafeAddrOfPinnedArrayElement(bytes, 0);
+                IntPtr nameAnsi = Marshal.StringToHGlobalAnsi(name);
+
+                IntPtr res = Env->Functions->DefineClass(Env, nameAnsi, loader.Handle, bytesPtr, bytes.Length);
+
+                Marshal.FreeHGlobal(nameAnsi);
+
+                using (JClass local = new JClass() { Handle = res, ReferenceType = JNI.ReferenceType.Local })
                 {
-                    IntPtr bytesPtr = Marshal.UnsafeAddrOfPinnedArrayElement(bytes, 0);
-                    IntPtr nameAnsi = Marshal.StringToHGlobalAnsi(name);
-
-                    IntPtr res = Env->Functions->DefineClass(Env, nameAnsi, loader.Handle, bytesPtr, bytes.Length);
-
-                    Marshal.FreeHGlobal(nameAnsi);
-
-                    using (JClass local = new JClass() { Handle = res, ReferenceType = JNI.ReferenceType.Local })
-                    {
-                        return NewGlobalRef<JClass>(local);
-                    }
+                    return NewGlobalRef<JClass>(local);
                 }
             }
         }
@@ -967,7 +962,7 @@ namespace JNISharp.NativeInterface
                     for (int i = 0; i < length; i++)
                         buf[i] = Convert.ToBoolean(arr[i]);
 
-                    Env->Functions->ReleaseBooleanArrayElements(Env, array.Handle, arr, 2);
+                    Env->Functions->ReleaseBooleanArrayElements(Env, array.Handle, arr, (int)JNI.ReleaseMode.Abort);
                     return (T[])(object)buf;
                 }
                 else if (t == typeof(sbyte))
@@ -979,7 +974,7 @@ namespace JNISharp.NativeInterface
                     for (int i = 0; i < length; i++)
                         buf[i] = arr[i];
 
-                    Env->Functions->ReleaseByteArrayElements(Env, array.Handle, arr, 2);
+                    Env->Functions->ReleaseByteArrayElements(Env, array.Handle, arr, (int)JNI.ReleaseMode.Abort);
                     return (T[])(object)buf;
                 }
                 else if (t == typeof(char))
@@ -991,7 +986,7 @@ namespace JNISharp.NativeInterface
                     for (int i = 0; i < length; i++)
                         buf[i] = arr[i];
 
-                    Env->Functions->ReleaseCharArrayElements(Env, array.Handle, arr, 2);
+                    Env->Functions->ReleaseCharArrayElements(Env, array.Handle, arr, (int)JNI.ReleaseMode.Abort);
                     return (T[])(object)buf;
                 }
                 else if (t == typeof(short))
@@ -1003,7 +998,7 @@ namespace JNISharp.NativeInterface
                     for (int i = 0; i < length; i++)
                         buf[i] = arr[i];
 
-                    Env->Functions->ReleaseShortArrayElements(Env, array.Handle, arr, 2);
+                    Env->Functions->ReleaseShortArrayElements(Env, array.Handle, arr, (int)JNI.ReleaseMode.Abort);
                     return (T[])(object)buf;
                 }
                 else if (t == typeof(int))
@@ -1015,7 +1010,7 @@ namespace JNISharp.NativeInterface
                     for (int i = 0; i < length; i++)
                         buf[i] = arr[i];
 
-                    Env->Functions->ReleaseIntArrayElements(Env, array.Handle, arr, 2);
+                    Env->Functions->ReleaseIntArrayElements(Env, array.Handle, arr, (int)JNI.ReleaseMode.Abort);
                     return (T[])(object)buf;
                 }
                 else if (t == typeof(long))
@@ -1027,7 +1022,7 @@ namespace JNISharp.NativeInterface
                     for (int i = 0; i < length; i++)
                         buf[i] = arr[i];
 
-                    Env->Functions->ReleaseLongArrayElements(Env, array.Handle, arr, 2);
+                    Env->Functions->ReleaseLongArrayElements(Env, array.Handle, arr, (int)JNI.ReleaseMode.Abort);
                     return (T[])(object)buf;
                 }
                 else if (t == typeof(float))
@@ -1039,7 +1034,7 @@ namespace JNISharp.NativeInterface
                     for (int i = 0; i < length; i++)
                         buf[i] = arr[i];
 
-                    Env->Functions->ReleaseFloatArrayElements(Env, array.Handle, arr, 2);
+                    Env->Functions->ReleaseFloatArrayElements(Env, array.Handle, arr, (int)JNI.ReleaseMode.Abort);
                     return (T[])(object)buf;
                 }
                 else if (t == typeof(double))
@@ -1051,7 +1046,7 @@ namespace JNISharp.NativeInterface
                     for (int i = 0; i < length; i++)
                         buf[i] = arr[i];
 
-                    Env->Functions->ReleaseDoubleArrayElements(Env, array.Handle, arr, 2);
+                    Env->Functions->ReleaseDoubleArrayElements(Env, array.Handle, arr, (int)JNI.ReleaseMode.Abort);
                     return (T[])(object)buf;
                 }
                 else
@@ -1331,7 +1326,7 @@ namespace JNISharp.NativeInterface
             }
             else
             {
-                throw new ArgumentException($"SetArrayRegion Type {t} not supported.");
+                throw new ArgumentException($"SetArrayElement Type {t} not supported.");
             }
         }
 
@@ -1376,7 +1371,7 @@ namespace JNISharp.NativeInterface
 
                 if(buf != IntPtr.Zero)
                 {
-                    return Marshal.PtrToStringAnsi(buf);
+                    return Marshal.PtrToStringUni(buf);
                 }
 
                 return null;
