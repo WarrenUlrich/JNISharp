@@ -49,26 +49,26 @@ namespace JNISharp.NativeInterface
 
         public static void InitializeFromCreatedVM()
         {
-            var res = JVMImports.JNI_GetCreatedJavaVMs(out VM, 1, out int _);
+            unsafe
+            {
+                var res = JVMImports.JNI_GetCreatedJavaVMs(out VM, 1, out int _);
 
-            if (res != JNI.Result.Ok)
-                throw new JNIResultException(res);
+                if (res != JNI.Result.Ok)
+                    throw new JNIResultException(res);
 
-            IntPtr temp = IntPtr.Zero;
-            res = VM->Functions->AttachCurrentThread(VM, out env, ref temp);
+                IntPtr temp = IntPtr.Zero;
+                res = VM->Functions->AttachCurrentThread(VM, out env, ref temp);
 
-            if (res != JNI.Result.Ok)
-                throw new JNIResultException(res);
+                if (res != JNI.Result.Ok)
+                    throw new JNIResultException(res);
+            }
         }
 
         public static int GetVersion()
         {
             unsafe
             {
-                unsafe
-                {
-                    return Env->Functions->GetVersion(Env);
-                }
+                return Env->Functions->GetVersion(Env);
             }
         }
 
@@ -186,7 +186,7 @@ namespace JNISharp.NativeInterface
             {
                 IntPtr res = Env->Functions->ExceptionOccurred(Env);
 
-                using (JThrowable local = new JThrowable() { Handle = res, ReferenceType = JNI.ReferenceType.Global })
+                using (JThrowable local = new JThrowable() { Handle = res, ReferenceType = JNI.ReferenceType.Local })
                 {
                     return NewGlobalRef<JThrowable>(local);
                 }
@@ -1291,32 +1291,32 @@ namespace JNISharp.NativeInterface
             }
             else if (t == typeof(sbyte))
             {
-                sbyte b = Convert.ToSByte(value);
+                sbyte b = (sbyte)(object)value;
                 Env->Functions->SetByteArrayRegion(Env, array.Handle, index, 1, &b);
             }
             else if (t == typeof(char))
             {
-                char c = Convert.ToChar(value);
+                char c = (char)(object)value;
                 Env->Functions->SetCharArrayRegion(Env, array.Handle, index, 1, &c);
             }
             else if (t == typeof(short))
             {
-                short s = Convert.ToInt16(value);
+                short s = (short)(object)value;
                 Env->Functions->SetShortArrayRegion(Env, array.Handle, index, 1, &s);
             }
             else if (t == typeof(int))
             {
-                int c = Convert.ToInt32(value);
+                int c = (int)(object)value;
                 Env->Functions->SetIntArrayRegion(Env, array.Handle, index, 1, &c);
             }
             else if (t == typeof(long))
             {
-                long l = Convert.ToInt64(value);
+                long l = (long)(object)value;
                 Env->Functions->SetLongArrayRegion(Env, array.Handle, index, 1, &l);
             }
             else if (t == typeof(float))
             {
-                float f = (char)(object)value;
+                float f = (float)(object)value;
                 Env->Functions->SetFloatArrayRegion(Env, array.Handle, index, 1, &f);
             }
             else if (t == typeof(double))
