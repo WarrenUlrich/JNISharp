@@ -100,19 +100,16 @@ namespace JNISharp.NativeInterface
                 }
                 else
                 {
-                    unsafe
+                    IntPtr nameAnsi = Marshal.StringToHGlobalAnsi(name);
+                    IntPtr res = Env->Functions->FindClass(Env, nameAnsi);
+
+                    Marshal.FreeHGlobal(nameAnsi);
+
+                    using (JClass local = new JClass() { Handle = res, ReferenceType = JNI.ReferenceType.Local })
                     {
-                        IntPtr nameAnsi = Marshal.StringToHGlobalAnsi(name);
-                        IntPtr res = Env->Functions->FindClass(Env, nameAnsi);
-
-                        Marshal.FreeHGlobal(nameAnsi);
-
-                        using (JClass local = new JClass() { Handle = res, ReferenceType = JNI.ReferenceType.Local })
-                        {
-                            JClass global = NewGlobalRef<JClass>(local);
-                            ClassCache.Add(name, global);
-                            return global;
-                        }
+                        JClass global = NewGlobalRef<JClass>(local);
+                        ClassCache.Add(name, global);
+                        return global;
                     }
                 }
             }
@@ -120,31 +117,42 @@ namespace JNISharp.NativeInterface
 
         public static JMethodID FromReflectedMethod(JObject method)
         {
-            throw new NotImplementedException();
+            unsafe
+            {
+                return Env->Functions->FromReflectedMethod(Env, method.Handle);
+            }
         }
 
         public static JFieldID FromReflectedField(JObject field)
         {
-            throw new NotImplementedException();
+            unsafe
+            {
+                return Env->Functions->FromReflectedField(Env, field.Handle);
+            }
         }
 
         public static JObject ToReflectedMethod(JClass cls, JMethodID methodID, bool isStatic)
         {
-            throw new NotImplementedException();
+            unsafe
+            {
+                IntPtr res = Env->Functions->ToReflectedMethod(Env, cls.Handle, methodID, Convert.ToByte(isStatic));
+
+                using(JObject local = new JObject() { Handle = res, ReferenceType = ReferenceType.Local })
+                {
+                    return NewGlobalRef<JObject>(local);
+                }
+            }
         }
 
         public static JClass GetSuperClass(JClass sub)
         {
             unsafe
             {
-                unsafe
-                {
-                    IntPtr res = Env->Functions->GetSuperClass(Env, sub.Handle);
+                IntPtr res = Env->Functions->GetSuperClass(Env, sub.Handle);
 
-                    using (JClass local = new JClass() { Handle = res, ReferenceType = JNI.ReferenceType.Local })
-                    {
-                        return NewGlobalRef<JClass>(local);
-                    }
+                using (JClass local = new JClass() { Handle = res, ReferenceType = JNI.ReferenceType.Local })
+                {
+                    return NewGlobalRef<JClass>(local);
                 }
             }
         }
@@ -364,11 +372,14 @@ namespace JNISharp.NativeInterface
             unsafe
             {
                 IntPtr argsPtr = Marshal.UnsafeAddrOfPinnedArrayElement(args, 0);
-                IntPtr res = Env->Functions->CallObjectMethodA(Env, obj.Handle, methodID, argsPtr);
 
-                using (JObject local = new JObject() { Handle = res, ReferenceType = JNI.ReferenceType.Local })
+                fixed(JValue* v = args)
                 {
-                    return NewGlobalRef<T>(local);
+                    IntPtr res = Env->Functions->CallObjectMethodA(Env, obj.Handle, methodID, argsPtr);
+                    using (JObject local = new JObject() { Handle = res, ReferenceType = JNI.ReferenceType.Local })
+                    {
+                        return NewGlobalRef<T>(local);
+                    }
                 }
             }
         }

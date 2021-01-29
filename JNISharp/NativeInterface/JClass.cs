@@ -103,6 +103,16 @@ namespace JNISharp.NativeInterface
             return JNI.GetField<T>(obj, this.GetFieldID(name, JNI.GetTypeSignature<T>()));
         }
 
+        public void SetObjectField(JObject obj, string name, string sig, JObject value)
+        {
+            JNI.SetObjectField(obj, this.GetFieldID(name, sig), value);
+        }
+
+        public void SetField<T>(JObject obj, string name, T value)
+        {
+            JNI.SetField<T>(obj, this.GetFieldID(name, JNI.GetTypeSignature<T>()), value);
+        }
+
         public T CallStaticObjectMethod<T>(string name, string sig, params JValue[] args) where T : JObject, new()
         {
             return JNI.CallStaticObjectMethod<T>(this, this.GetStaticMethodID(name, sig), args);
