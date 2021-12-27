@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace JNISharp.NativeInterface;
 
-namespace JNISharp.NativeInterface
+public class JString : JObject
 {
-    public class JString : JObject
-    {
-        public JString() : base() { }
+    public JString() : base() { }
 
-        public string GetString() => JNI.GetJStringString(this);
-    }
+    public string GetString() => JNI.GetJStringString(this);
 }

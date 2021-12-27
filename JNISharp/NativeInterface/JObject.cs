@@ -1,61 +1,51 @@
-﻿using Microsoft.Win32.SafeHandles;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
+﻿namespace JNISharp.NativeInterface;
 
-namespace JNISharp.NativeInterface
+public class JObject : IDisposable
 {
-    public class JObject : IDisposable
+    private bool Disposed { get; set; }
+
+    public IntPtr Handle { get; init; }
+
+    internal JNI.ReferenceType ReferenceType { get; init; }
+
+    public JObject() { }
+
+    protected virtual void Dispose(bool disposing)
     {
-        private bool Disposed { get; set; }
+        if (Disposed)
+            return;
 
-        public IntPtr Handle { get; init; }
-
-        internal JNI.ReferenceType ReferenceType { get; init; }
-
-        public JObject() { }
-
-        protected virtual void Dispose(bool disposing)
+        switch (this.ReferenceType)
         {
-            if (Disposed)
-                return;
+            case JNI.ReferenceType.Local:
+                JNI.DeleteLocalRef(this);
+                break;
 
-            switch (this.ReferenceType)
-            {
-                case JNI.ReferenceType.Local:
-                    JNI.DeleteLocalRef(this);
-                    break;
+            case JNI.ReferenceType.Global:
+                JNI.DeleteGlobalRef(this);
+                break;
 
-                case JNI.ReferenceType.Global:
-                    JNI.DeleteGlobalRef(this);
-                    break;
-
-                case JNI.ReferenceType.WeakGlobal:
-                    JNI.DeleteWeakGlobalRef(this);
-                    break;
-            }
-
-            Disposed = true;
+            case JNI.ReferenceType.WeakGlobal:
+                JNI.DeleteWeakGlobalRef(this);
+                break;
         }
 
-        public bool Valid()
-        {
-            return this.Handle != IntPtr.Zero;
-        }
+        Disposed = true;
+    }
 
-        ~JObject()
-        {
-             Dispose(disposing: false);
-        }
+    public bool Valid()
+    {
+        return this.Handle != IntPtr.Zero;
+    }
 
-        public void Dispose()
-        {
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
+    ~JObject()
+    {
+        Dispose(disposing: false);
+    }
+
+    public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
     }
 }

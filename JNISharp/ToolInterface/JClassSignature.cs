@@ -1,43 +1,37 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿namespace JNISharp.ToolInterface;
+
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
-namespace JNISharp.ToolInterface
+public class JClassSignature
 {
-    public class JClassSignature
+    [JsonInclude]
+    public string Signature { get; init; }
+
+    [JsonInclude]
+    public string Generic { get; init; }
+
+    [JsonInclude]
+    public IEnumerable<JFieldSignature> FieldSignatures { get; init; }
+
+    [JsonInclude]
+    public IEnumerable<JMethodSignature> MethodSignatures { get; init; }
+
+    public JClassSignature(string signature, string generic, IEnumerable<JFieldSignature> fieldSignatures, IEnumerable<JMethodSignature> methodSignatures)
     {
-        [JsonInclude]
-        public string Signature { get; init; }
+        this.Signature = signature;
+        this.Generic = generic;
+        this.FieldSignatures = fieldSignatures;
+        this.MethodSignatures = methodSignatures;
+    }
 
-        [JsonInclude]
-        public string Generic { get; init; }
+    public string ToJson()
+    {
+        return JsonSerializer.Serialize(this);
+    }
 
-        [JsonInclude]
-        public IEnumerable<JFieldSignature> FieldSignatures { get; init; }
-
-        [JsonInclude]
-        public IEnumerable<JMethodSignature> MethodSignatures { get; init; }
-
-        public JClassSignature(string signature, string generic, IEnumerable<JFieldSignature> fieldSignatures, IEnumerable<JMethodSignature> methodSignatures)
-        {
-            this.Signature = signature;
-            this.Generic = generic;
-            this.FieldSignatures = fieldSignatures;
-            this.MethodSignatures = methodSignatures;
-        }
-
-        public string ToJson()
-        {
-            return JsonSerializer.Serialize(this);
-        }
-
-        public string ToJson(JsonSerializerOptions options)
-        {
-            return JsonSerializer.Serialize(this, options);
-        }
+    public string ToJson(JsonSerializerOptions options)
+    {
+        return JsonSerializer.Serialize(this, options);
     }
 }

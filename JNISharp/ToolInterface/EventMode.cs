@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace JNISharp.ToolInterface;
 
-namespace JNISharp.ToolInterface
+public static partial class JVMTI
 {
-    public static partial class JVMTI
+    public enum EventMode
     {
-        public enum EventMode
-        {
-            Enable = 1,
-            Disable = 0
-        }
+        Enable = 1,
+        Disable = 0
     }
 }

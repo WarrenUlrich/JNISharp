@@ -1,42 +1,37 @@
-﻿using System;
+﻿namespace JNISharp.NativeInterface;
+
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace JNISharp.NativeInterface
+public class JArray<T> : JObject, IEnumerable<T>
 {
-    public class JArray<T> : JObject, IEnumerable<T>
+    public JArray() : base() { }
+
+    public JArray(int size) => JNI.NewArray<T>(size);
+
+    public int Length => JNI.GetArrayLength(this);
+
+    public T this[int index]
     {
-        public JArray() : base() { }
+        get => JNI.GetArrayElement(this, index);
+        set => JNI.SetArrayElement(this, index, value);
+    }
 
-        public JArray(int size) => JNI.NewArray<T>(size);
+    public T[] GetElements()
+    {
+        return JNI.GetArrayElements(this);
+    }
 
-        public int Length => JNI.GetArrayLength(this);
-
-        public T this[int index]
+    public IEnumerator<T> GetEnumerator()
+    {
+        for (int i = 0; i < this.Length; i++)
         {
-            get => JNI.GetArrayElement(this, index);
-            set => JNI.SetArrayElement(this, index, value);
+            yield return JNI.GetArrayElement(this, i);
         }
+    }
 
-        public T[] GetElements()
-        {
-            return JNI.GetArrayElements(this);
-        }
-
-        public IEnumerator<T> GetEnumerator()
-        {
-            for(int i = 0; i < this.Length; i++)
-            {
-                yield return JNI.GetArrayElement(this, i);
-            }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return this.GetEnumerator();
-        }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return this.GetEnumerator();
     }
 }
