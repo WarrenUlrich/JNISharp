@@ -10,9 +10,21 @@ public class JObject : IDisposable
 
     public JObject() { }
 
+    public JObject(IntPtr handle, JNI.ReferenceType referenceType)
+    {
+        this.Handle = handle;
+        this.ReferenceType = referenceType;
+    }
+
+    public JObject(JObject obj) : this(obj.Handle, obj.ReferenceType) 
+    {
+        this.Disposed = obj.Disposed;
+        obj.Disposed = true;
+    }
+
     protected virtual void Dispose(bool disposing)
     {
-        if (Disposed)
+        if (Disposed || this.Handle == IntPtr.Zero)
             return;
 
         switch (this.ReferenceType)

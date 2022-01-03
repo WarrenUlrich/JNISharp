@@ -305,8 +305,8 @@ public unsafe static partial class JNI
         {
             IntPtr argsPtr = Marshal.UnsafeAddrOfPinnedArrayElement(args, 0);
             IntPtr res = Env->Functions->NewObjectA(Env, cls.Handle, methodID, argsPtr);
-
-            using JObject local = new() { Handle = res, ReferenceType = JNI.ReferenceType.Local };
+            Console.WriteLine($"Res: {res}");
+            JObject local = new() { Handle = res, ReferenceType = JNI.ReferenceType.Local };
             return NewGlobalRef<T>(local);
         }
     }

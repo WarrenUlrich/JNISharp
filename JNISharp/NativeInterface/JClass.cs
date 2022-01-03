@@ -136,4 +136,9 @@ public class JClass : JObject
     {
         JNI.CallVoidMethod(obj, this.GetMethodID(name, sig), args);
     }
+
+    public T NewObject<T>(string name, string sig, params JValue[] args) where T : JObject, new()
+    {
+        return JNI.NewObject<T>(this, this.GetMethodID(name, sig), args);
+    }
 }
